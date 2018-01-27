@@ -9,13 +9,13 @@ class Board:
         self.board.append(0)
         self.goal = copy.deepcopy(self.board)
         self.blank_idx = len(self.board) - 1
-        self.previous_state = None
+        self.previous_board = None
         self.ply = 0
 
         for _ in range(randomness):
-            self.move(random.choice(self.get_moves()))
+            self.move(random.choice(self.get_moves()), False)
 
-        # reset ply to 0 if board was randomized
+        # reset ply to 0
         self.ply = 0
 
     def finished(self):
@@ -30,12 +30,10 @@ class Board:
         their final location on the board
         """
         misplaced = 0
-        counter = 1
         
         for i in range(len(self.board) - 1):
-            if self.board[i] != counter:
+            if self.board[i] != i + 1:
                 misplaced += 1
-            counter += 1
             
         return misplaced
 
@@ -45,12 +43,11 @@ class Board:
         through a valid move on the board, ignoring the
         board's previous position to avoid loops
         """
-
         neighbors = []
 
-        for move in self.get_moves():
+        for direction in self.get_moves():
             board_copy = copy.deepcopy(self)
-            board_copy.move(move)
+            board_copy.move(direction, False)
 
             if board_copy.board != self.previous_board:
                 neighbors.append(board_copy)
@@ -77,25 +74,26 @@ class Board:
 
         return moves
         
-    def move(self, direction):
+    def move(self, direction, validate=True):
         """ 
         moves a square into the empty space if possible
         """
 
-        if direction == "d" and self.blank_idx > self.side - 1:
-            new_idx = self.blank_idx - self.side
-        elif direction == "u" and self.blank_idx < len(self.board) - self.side:
-            new_idx = self.blank_idx + self.side
-        elif direction == "r" and self.blank_idx % self.side > 0:
-            new_idx = self.blank_idx - 1
-        elif direction == "l" and self.blank_idx % self.side < self.side - 1:
-            new_idx = self.blank_idx + 1
-        else: # invalid move
+        if validate and direction not in self.get_moves():
             return False
 
         self.ply += 1
         self.previous_board = copy.deepcopy(self.board)
-        self._swap_with_blank(new_idx)
+            
+        if direction == "d":
+            self._swap_with_blank(self.blank_idx - self.side)
+        elif direction == "u":
+            self._swap_with_blank(self.blank_idx + self.side)
+        elif direction == "r":
+            self._swap_with_blank(self.blank_idx - 1)
+        else: # direction == "l":
+            self._swap_with_blank(self.blank_idx + 1)
+
         return True
         
     def _swap_with_blank(self, dest_idx):

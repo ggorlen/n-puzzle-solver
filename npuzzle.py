@@ -27,7 +27,7 @@ class NPuzzle:
 
 
 if __name__ == "__main__":
-    puzzle = NPuzzle(3, 6000)
+    puzzle = NPuzzle(3, 800)
     print("original puzzle:")
     print(puzzle.board)
     puzzle.solve()
