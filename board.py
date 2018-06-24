@@ -3,20 +3,30 @@ import random
 
 
 class Board:
-    def __init__(self, side=4, randomness=1000, board=None):
+    def __init__(self, side=4, randomness=0, board=None):
         self.side = side
-        self.board = list(range(1, side * side))
-        self.board.append(0)
-        self.goal = copy.deepcopy(self.board)
-        self.blank_idx = len(self.board) - 1
+        self.goal = list(range(1, side * side)) + [0]
         self.previous_board = None
         self.ply = 0
 
-        for _ in range(randomness):
-            self.move(random.choice(self.get_moves()), False)
+        if board:
+            self.board = board
+            self.blank_idx = self.board.index(0)
+        else:
+            self.board = list(range(1, side * side)) + [0]
+            self.blank_idx = self.board.index(0)
 
-        # reset ply to 0
-        self.ply = 0
+            for _ in range(randomness):
+                self.move(random.choice(self.get_moves()), False)
+
+            # reset ply to 0
+            self.ply = 0
+
+    def cost_to(self, neighbor):
+        """
+        provides the cost to travel to an adjacent position
+        """
+        return 1
 
     def finished(self):
         """ 
@@ -24,18 +34,11 @@ class Board:
         """
         return self.board == self.goal
 
-    def misplaced_count(self):
-        """ 
-        counts the number of squares not in 
-        their final location on the board
+    def get_heuristic(self):
         """
-        misplaced = 0
-        
-        for i in range(len(self.board) - 1):
-            if self.board[i] != i + 1:
-                misplaced += 1
-            
-        return misplaced
+        provides the heuristic value of the node using hamming priority
+        """
+        return self.ply + self.misplaced_count()
 
     def get_neighbors(self):
         """ 
@@ -73,6 +76,19 @@ class Board:
             moves.append("l")
 
         return moves
+
+    def misplaced_count(self):
+        """ 
+        counts the number of squares not in 
+        their final location on the board
+        """
+        misplaced = 0
+        
+        for i in range(len(self.board)):
+            if self.board[i] and self.board[i] != i + 1:
+                misplaced += 1
+            
+        return misplaced
         
     def move(self, direction, validate=True):
         """ 
@@ -109,9 +125,9 @@ class Board:
 
     def __lt__(self, other):
         """ 
-        hamming priority
+        compares this and another node by heuristic value
         """
-        return self.ply + self.misplaced_count() < other.ply + other.misplaced_count()
+        return self.get_heuristic() < other.get_heuristic()
 
     def __str__(self):
         b = ["\n\n     "]

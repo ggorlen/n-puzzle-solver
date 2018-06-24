@@ -23,7 +23,7 @@ class AStar:
                 return self._path(goal, came_from)
             
             for neighbor in current.get_neighbors():
-                new_cost = cost_so_far[current] + 1
+                new_cost = cost_so_far[current] + current.cost_to(neighbor)
                 
                 if not neighbor in cost_so_far or new_cost < cost_so_far[neighbor]:
                     cost_so_far[neighbor] = new_cost
